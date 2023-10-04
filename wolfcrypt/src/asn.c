@@ -27615,6 +27615,8 @@ static const ASNItem static_certExtsASN[] = {
 /* AKID_STR      */        { 1, ASN_OCTET_STRING, 0, 1, 0 },
 /* AKID_STR_SEQ, */            { 2, ASN_SEQUENCE, 1, 1, 0 },
 /* AKID_KEYID    */                { 3, ASN_CONTEXT_SPECIFIC | 0, 0, 0, 0 },
+/* AKID_ISSUER   */                { 3, ASN_CONTEXT_SPECIFIC | 0, 0, 0, 0 },
+/* AKID_SERIAL   */                { 3, ASN_CONTEXT_SPECIFIC | 0, 0, 0, 0 },
                                        /* Key Usage - 4.2.1.3 */
 /* KU_SEQ        */    { 0, ASN_SEQUENCE, 1, 1, 0 },
 /* KU_OID        */        { 1, ASN_OBJECT_ID, 0, 0, 0 },
@@ -27662,6 +27664,8 @@ enum {
     CERTEXTSASN_IDX_AKID_STR,
     CERTEXTSASN_IDX_AKID_STR_SEQ,
     CERTEXTSASN_IDX_AKID_KEYID,
+    CERTEXTSASN_IDX_AKID_ISSUER,
+    CERTEXTSASN_IDX_AKID_SERIAL,
     CERTEXTSASN_IDX_KU_SEQ,
     CERTEXTSASN_IDX_KU_OID,
     CERTEXTSASN_IDX_KU_CRIT,
@@ -27844,9 +27848,18 @@ static int EncodeExtensions(Cert* cert, byte* output, word32 maxSz,
                         cert->akid, (word32)cert->akidSz);
             }
         }
-        else
+         if (cert->authKeyIdIssSet) {
+            SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_ISSUER],
+                cert->issRaw, (word32)sizeof(CertName));
+
+            SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_SERIAL],
+                cert->serial, (word32)cert->serialSz);
+        }
+        if (!(cert->akidSz > 0) && !cert->authKeyIdIssSet) {
     #endif
+    #ifndef WOLFSSL_CERT_EXT
         {
+    #endif
             /* Don't write out Authority Key Identifier extension items. */
             SetASNItem_NoOut(dataASN, CERTEXTSASN_IDX_AKID_SEQ,
                     CERTEXTSASN_IDX_AKID_KEYID);

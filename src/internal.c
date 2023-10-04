@@ -12510,6 +12510,10 @@ int CopyDecodedToX509(WOLFSSL_X509* x509, DecodedCert* dCert)
                                  dCert->extAuthKeyIdSrc, dCert->extAuthKeyIdSz);
             x509->authKeyIdSz = dCert->extAuthKeyIdSz;
         }
+
+        if (dCert->extAuthKeyIdIssuer !=NULL  && dCert->extAuthKeyIdIssuerSN) {
+            x509->authKeyIdIssSet = 1;
+        }
     #endif
         else
             ret = MEMORY_E;

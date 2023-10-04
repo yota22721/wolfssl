@@ -1309,6 +1309,9 @@ int wolfSSL_X509_add_ext(WOLFSSL_X509 *x509, WOLFSSL_X509_EXTENSION *ext, int lo
             WOLFSSL_MSG("asn1_string_copy_to_buffer error");
             return WOLFSSL_FAILURE;
         }
+        if (XSTRNCMP((const char *)ext->obj->obj, name, XSTRLEN(name)) == 0) {
+            x509->authKeyIdIssSet = 1;
+        }
         x509->authKeyIdCrit = (byte)ext->crit;
         break;
     case NID_subject_key_identifier:
