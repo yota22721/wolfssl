@@ -5041,7 +5041,6 @@ struct WOLFSSL_X509 {
     byte             subjAltNameSet:1;
     byte             subjAltNameCrit:1;
     byte             authKeyIdSet:1;
-    byte             authKeyIdIssSet:1;
     byte             authKeyIdCrit:1;
     byte             issuerSet:1;
 #ifdef WOLFSSL_CUSTOM_OID
