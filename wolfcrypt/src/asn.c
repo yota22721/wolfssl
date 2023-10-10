@@ -20777,7 +20777,8 @@ end:
     while ((ret == 0) && (idx < (word32)sz)) {
         byte critical = 0;
         int isUnknownExt = 0;
-
+        WOLFSSL_LEAVE("decode ext: idx : ",idx);
+        WOLFSSL_LEAVE("decode ext sz : ",sz);
         /* Clear dynamic data. */
         XMEMSET(dataASN, 0, sizeof(*dataASN) * certExtASN_Length);
         /* Ensure OID is an extension type. */
@@ -27833,33 +27834,38 @@ static int EncodeExtensions(Cert* cert, byte* output, word32 maxSz,
             /* Set Authority Key Identifier OID and data. */
             SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_OID],
                     akidOID, sizeof(akidOID));
-        #ifdef WOLFSSL_AKID_NAME
-            if (cert->rawAkid) {
-                SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_STR],
-                        cert->akid, (word32)cert->akidSz);
-                /* cert->akid contains the internal ext structure */
-                SetASNItem_NoOutBelow(dataASN, certExtsASN,
-                        CERTEXTSASN_IDX_AKID_STR, certExtsASN_Length);
+            if (cert->akidSz == CTC_MAX_AKID_SIZE) {
+            #ifdef WOLFSSL_AKID_NAME
+                if (cert->rawAkid) {
+                    SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_STR],
+                            cert->akid, (word32)cert->akidSz);
+                    /* cert->akid contains the internal ext structure */
+                    SetASNItem_NoOutBelow(dataASN, certExtsASN,
+                            CERTEXTSASN_IDX_AKID_STR, certExtsASN_Length);
+                }
+                else
+            #endif
+                {
+                    SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_KEYID],
+                            cert->akid, (word32)cert->akidSz);
+                }
             }
-            else
-        #endif
-            {
-                SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_KEYID],
-                        cert->akid, (word32)cert->akidSz);
-            }
-        }
-         if (cert->authKeyIdIssSet) {
-            SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_ISSUER],
-                cert->issRaw, (word32)sizeof(CertName));
+            else if(CTC_MAX_AKID_SIZE <= cert->akidSz) {
+                if(cert->akidSz == CTC_MAX_AKID_SIZE + 
+                                    (int)sizeof(cert->issRaw) + CTC_SERIAL_SIZE) {
+                    SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_KEYID],
+                        cert->akid, (word32)CTC_MAX_AKID_SIZE);
+                }
+                SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_ISSUER],
+                        cert->issRaw, (word32)XSTRLEN((const char*)cert->issRaw));
 
-            SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_SERIAL],
-                cert->serial, (word32)cert->serialSz);
+                SetASN_Buffer(&dataASN[CERTEXTSASN_IDX_AKID_SERIAL],
+                        cert->serial, (word32)cert->serialSz);
+            }
         }
-        if (!(cert->akidSz > 0) && !cert->authKeyIdIssSet) {
+        else
     #endif
-    #ifndef WOLFSSL_CERT_EXT
         {
-    #endif
             /* Don't write out Authority Key Identifier extension items. */
             SetASNItem_NoOut(dataASN, CERTEXTSASN_IDX_AKID_SEQ,
                     CERTEXTSASN_IDX_AKID_KEYID);
