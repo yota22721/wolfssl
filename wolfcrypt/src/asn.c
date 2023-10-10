@@ -20777,8 +20777,7 @@ end:
     while ((ret == 0) && (idx < (word32)sz)) {
         byte critical = 0;
         int isUnknownExt = 0;
-        WOLFSSL_LEAVE("decode ext: idx : ",idx);
-        WOLFSSL_LEAVE("decode ext sz : ",sz);
+
         /* Clear dynamic data. */
         XMEMSET(dataASN, 0, sizeof(*dataASN) * certExtASN_Length);
         /* Ensure OID is an extension type. */
